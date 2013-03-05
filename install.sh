@@ -130,7 +130,7 @@ then
 	then
 		# Install Open SSH Server And Git
 		echo -e "\033[34m Installing Open SSH Server, Git and Curl... \e[0m"
-		yum -y install openssh-server git-core curl perl-Time-HiRes & >l $LOGFILE \
+		yum -y install openssh-server git-core curl perl-Time-HiRes &>> $LOGFILE \
 		|| OwnError "Unable To Install Open SSH Server, Git, Curl And perl-Time-HiRes"
 	fi
 fi
@@ -146,12 +146,13 @@ then
 	| tee -ai $LOGFILE
 	read -p "Enter The Username [git]: " GITUSER
 
-# Enter Then Used Default Git
-if [[ $GITUSER = "" ]]
-then
-	GITUSER=git 
-	echo GITUSER = $GITUSER &>> $LOGFILE
-fi      
+	# Enter Then Used Default Git
+	if [[ $GITUSER = "" ]]
+	then
+		GITUSER=git 
+		echo GITUSER = $GITUSER &>> $LOGFILE
+	fi
+
 else            
 	GITUSER=$1
 	echo GITUSER = $GITUSER &>> $LOGFILE
@@ -324,7 +325,7 @@ sudo -H -u $GITUSER sed -i 's/0077/0007/g' /home/$GITUSER/.gitolite.rc \
 echo -e "\033[34m Creating post-receive Hooks \e[0m" | tee -ai $LOGFILE
 cd $BASEPATH
 
-cd ../../../public/ || OwnError "Unable To Change Directory For Hookspath"
+cd ../../../public/ 2> /dev/null 2> /dev/null #|| OwnError "Unable To Change Directory For Hookspath"
 if [ -f .hookspath.rt ]
 then
 	HOOKSPATH=$(cat .hookspath.rt)
@@ -339,9 +340,47 @@ then
 	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
 	sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
 else
-	echo | tee -ai $LOGFILE
-	echo -e "\033[31m Can't create post-receive Hooks !!  \e[0m" | tee -ai $LOGFILE
-	echo
+	if [ $# -lt 3 ]
+	then
+		echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
+		read -p " Enter The AC Domain Name: " DOMAIN
+		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
+		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	else
+		DOMAIN=$3
+		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
+		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	fi
+			
+
+	if [ $# -lt 4 ]
+	then
+		echo -e "\033[34m Enter Your Active Collab First Five Letter Of License Key: \e[0m"
+		read -p " Enter Your Active Collab First Five Letter Of License Key: " LICENSE
+		ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
+		echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+	else
+		LICENSE=$4
+		ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
+		echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+		
+	fi
+
+	HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
+       	echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
+
+	CURLPATH=$(whereis curl | cut -d' ' -f2)
+
+	sudo -H -u $GITUSER echo "$CURLPATH -s -L \"$HOOKSPATH\" > /dev/null " \
+	&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
+
+	sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
+	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
+	sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
+
+	#echo | tee -ai $LOGFILE
+	#echo -e "\033[31m Can't create post-receive Hooks !!  \e[0m" | tee -ai $LOGFILE
+	#echo
 fi
 
 
