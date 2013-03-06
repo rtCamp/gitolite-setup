@@ -1,7 +1,7 @@
 Gitolite Setup
 ==============
 
-Setup scripts for Gitolite v3 
+Gitolite v3 setup scripts for Ubuntu, Debian, CentOS & RHEL
 
 ### Installation Guide
 
