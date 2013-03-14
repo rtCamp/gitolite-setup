@@ -177,7 +177,7 @@ then
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ]
 then
 	echo -e "\033[34m Creating $LINUXDISTRO System User [$GITUSER]  \e[0m" | tee -ai $LOGFILE
-	sudo adduser --system --home /home/$GITUSER --create-home --shell /bin/bash \
+	sudo adduser --home /home/$GITUSER --create-home --shell /bin/bash \
 	-c 'git version control' $GITUSER
 
 	# Redhat Is More Secure Than Debian and Ubuntu
