@@ -392,7 +392,7 @@ echo -e "\033[34m cat $LOGFILE \e[0m" | tee -ai $LOGFILE
 
 echo
 echo -e "\033[34m Gitolite Admin Is Successfully Installed On `date` \e[0m" | tee -ai $LOGFILE
-echo -e "\033[34m Please Go Back To Gitolite Admin, Test Connection And Save Settings. \e[0m" \
+#echo -e "\033[34m Please Go Back To Gitolite Admin, Test Connection And Save Settings. \e[0m" \
 | tee -ai $LOGFILE
 
 
