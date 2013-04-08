@@ -244,69 +244,98 @@ then
 	sudo usermod -a -G $GITUSER $WEBUSER
 fi
 
-# Get The Web User Home Dir Path
-WEBUSERHOME=$(grep $WEBUSER: /etc/passwd | cut -d':' -f6 | head -n1)
-echo WEBUSERHOME = $WEBUSERHOME &>> $LOGFILE
-if [ -z $WEBUSERHOME ]
-then
-	echo | tee -ai $LOGFILE
-	echo -e "\033[31m Unable To Detect $WEBUSER Home Directory !! \e[0m" | tee -ai $LOGFILE
-	read -p "Enter The Home Directory Path For [$WEBUSER]: " WEBUSERHOME
-fi
-
-# Checks .ssh Directory Exist
-ls $WEBUSERHOME/.ssh &>> tee -ai $LOGFILE
-if [ $? -ne 0 ]
-then
-	echo -e "\033[34m Creating .ssh Directory \e[0m" | tee -ai $LOGFILE
-	sudo mkdir -p $WEBUSERHOME/.ssh || OwnError "Unable To Create $WEBUSERHOME/.ssh"
-	sudo chown -R $WEBUSER:$WEBUSER $WEBUSERHOME/.ssh \
-	|| OwnError "Unable To Change Ownership (chown) .ssh"
-fi
-
-# Checks Weather id_rsa Key Exist
-sudo ls  $WEBUSERHOME/.ssh/id_rsa &>> $LOGFILE
+# Check Local/Remote ActiveCollab
+curl -sI test.com/www-data.pub | head -n1 | grep -i  '200 OK'
 if [ $? -eq 0 ]
 then
-	echo -e "\033[34m The SSH Key id_rsa Already Exists \e[0m" | tee -ai $LOGFILE
+	# Gitolite & ActiveCollab Is On Different System
+	
+	# Pre Checks Of ActiveCollab Domain
+	if [ $# -lt 3 ]
+	then
+		echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
+		read -p " Enter The AC Domain Name: " DOMAIN
+		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
+		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	else
+		DOMAIN=$3
+		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
+		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	fi
+	
+	# Copy WEBUSER SSH Public Key To GITUSER Home Directory
+	sudo wget -co /home/$GITUSER/$WEBUSER.pub  $ACDOMAIN/www-data.pub \
+	|| OwnError "Unable To Copy $3 $WEBUSER Pubkey"
+	
 else
+	# Gitolite & ActiveCollab Is On Same System
 
-	# Generate SSH Keys For Web User
-	echo -e "\033[34m Generating SSH Keys For $WEBUSER \e[0m" | tee -ai $LOGFILE
-	sudo -H -u $WEBUSER ssh-keygen -q -N '' -f $WEBUSERHOME/.ssh/id_rsa \
-	|| OwnError "Unable To Create SSH Keys For $WEBUSER"
+	# Get The Web User Home Dir Path
+	WEBUSERHOME=$(grep $WEBUSER: /etc/passwd | cut -d':' -f6 | head -n1)
+	echo WEBUSERHOME = $WEBUSERHOME &>> $LOGFILE
+	if [ -z $WEBUSERHOME ]
+	then
+		echo | tee -ai $LOGFILE
+		echo -e "\033[31m Unable To Detect $WEBUSER Home Directory !! \e[0m" | tee -ai $LOGFILE
+		read -p "Enter The Home Directory Path For [$WEBUSER]: " WEBUSERHOME
+	fi
+
+	# Checks .ssh Directory Exist
+	ls $WEBUSERHOME/.ssh &>> tee -ai $LOGFILE
+	if [ $? -ne 0 ]
+	then
+		echo -e "\033[34m Creating .ssh Directory \e[0m" | tee -ai $LOGFILE
+		sudo mkdir -p $WEBUSERHOME/.ssh || OwnError "Unable To Create $WEBUSERHOME/.ssh"
+		sudo chown -R $WEBUSER:$WEBUSER $WEBUSERHOME/.ssh \
+		|| OwnError "Unable To Change Ownership (chown) .ssh"
+	fi
+
+	# Checks Weather id_rsa Key Exist
+	sudo ls  $WEBUSERHOME/.ssh/id_rsa &>> $LOGFILE
+	if [ $? -eq 0 ]
+	then
+		echo -e "\033[34m The SSH Key id_rsa Already Exists \e[0m" | tee -ai $LOGFILE
+	else
+
+		# Generate SSH Keys For Web User
+		echo -e "\033[34m Generating SSH Keys For $WEBUSER \e[0m" | tee -ai $LOGFILE
+		sudo -H -u $WEBUSER ssh-keygen -q -N '' -f $WEBUSERHOME/.ssh/id_rsa \
+		|| OwnError "Unable To Create SSH Keys For $WEBUSER"
+	fi
+
+
+	# Create known_hosts file if not exist
+	# Or if known_hosts exist update timestamp 
+	sudo touch $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To Create known_hosts"
+
+	# Give 666 Permission To Add SSH Server Fingerprint
+	sudo chmod 666 $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To chmod 666 known_hosts"
+
+	# Use Wildcard For Match All The Domains
+	sudo echo -n "* " >> $WEBUSERHOME/.ssh/known_hosts \
+	|| OwnError "Unable To Add wildcard As Server-name"
+
+	# Copy The SSH Server Fingerprint
+	cat /etc/ssh/ssh_host_rsa_key.pub >> $WEBUSERHOME/.ssh/known_hosts \
+	|| OwnError "Unable To Add SSH Server Fingerprint"
+
+
+	# Give Back 644 Permission To Add SSH Server Fingerprint
+	sudo chmod 644 $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To chmod 644 known_hosts"
+	sudo chown $WEBUSER:$WEBUSER $WEBUSERHOME/.ssh/known_hosts \
+	|| OwnError "Unable To Chnage Ownership (chown) known_hosts"
+
+
+	# Copy WEBUSER SSH Public Key To GITUSER Home Directory
+	sudo cp $WEBUSERHOME/.ssh/id_rsa.pub /home/$GITUSER/$WEBUSER.pub \
+	|| OwnError "Unable To Copy $WEBUSER Pubkey"
+
 fi
-
-
-# Create known_hosts file if not exist
-# Or if known_hosts exist update timestamp 
-sudo touch $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To Create known_hosts"
-
-# Give 666 Permission To Add SSH Server Fingerprint
-sudo chmod 666 $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To chmod 666 known_hosts"
-
-# Use Wildcard For Match All The Domains
-sudo echo -n "* " >> $WEBUSERHOME/.ssh/known_hosts \
-|| OwnError "Unable To Add wildcard As Server-name"
-
-# Copy The SSH Server Fingerprint
-cat /etc/ssh/ssh_host_rsa_key.pub >> $WEBUSERHOME/.ssh/known_hosts \
-|| OwnError "Unable To Add SSH Server Fingerprint"
-
-
-# Give Back 644 Permission To Add SSH Server Fingerprint
-sudo chmod 644 $WEBUSERHOME/.ssh/known_hosts || OwnError "Unable To chmod 644 known_hosts"
-sudo chown $WEBUSER:$WEBUSER $WEBUSERHOME/.ssh/known_hosts \
-|| OwnError "Unable To Chnage Ownership (chown) known_hosts"
-
 
 # Setup Gitolite Admin
 echo | tee -ai $LOGFILE
 echo -e "\033[34m Setup Gitolite Admin...  \e[0m" | tee -ai $LOGFILE
 
-sudo cp $WEBUSERHOME/.ssh/id_rsa.pub /home/$GITUSER/$WEBUSER.pub \
-|| OwnError "Unable To Copy $WEBUSER Pubkey"
-	
 sudo chown $GITUSER:$GITUSER /home/$GITUSER/$WEBUSER.pub \
 || OwnError "Unable To Change Ownership Of $WEBUSER"
 
@@ -394,5 +423,4 @@ echo
 echo -e "\033[34m Gitolite Admin Is Successfully Installed On `date` \e[0m" | tee -ai $LOGFILE
 #echo -e "\033[34m Please Go Back To Gitolite Admin, Test Connection And Save Settings. \e[0m" \
 | tee -ai $LOGFILE
-
 
