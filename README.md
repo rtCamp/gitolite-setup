@@ -6,9 +6,7 @@ Gitolite v3 setup scripts for Ubuntu, Debian, CentOS & RHEL
 ### Installation Guide
 
 ```shell
-wget https://raw.github.com/rtCamp/gitolite-setup/master/install.sh
-
-sudo bash install.sh GITUSER WEBUSER ACDOMAIN ACLICENSE
+curl -Ls http://rt.cx/gitlab | sudo bash -s GITUSER WEBUSER ACDOMAIN ACLICENSE
 ```
 
 ###DESCRIPTION
