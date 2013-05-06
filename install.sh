@@ -400,7 +400,7 @@ sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
 #echo | tee -ai $LOGFILE
 #echo -e "\033[31m Can't create post-receive Hooks !!  \e[0m" | tee -ai $LOGFILE
 #echo
-fi
+#fi
 
 
 # Log Messages
