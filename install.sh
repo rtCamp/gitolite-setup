@@ -18,7 +18,7 @@
 
 
 # Variables
-BASEPATH=$(dirname $0 )
+#BASEPATH=$(dirname $0 )
 LOGFILE=/var/log/gitolite.sh.log
 
 
@@ -139,7 +139,7 @@ fi
 
 
 
-# Ask User If Script Run Withour ARGS
+# Ask User If Script Run Withour ARGS (Get Git Username)
 if [ $# -lt 1 ]
 then
 	echo -e "\033[34m An User Account Will Be Created For Gitolite Admin Setup... \e[0m" \
@@ -216,7 +216,7 @@ sudo -H -u $GITUSER gitolite/install -to /home/$GITUSER/bin \
 
 
 
-# Ask User If Script Run Withour ARGS
+# Ask User If Script Run Withour ARGS (Get Web Username)
 if [ $# -lt 2 ]
 then
 	echo -e "\033[34m PHP Username Is Given At Gitolite Settings [Need Help Section] \e[0m" \
@@ -244,32 +244,31 @@ then
 	sudo usermod -a -G $GITUSER $WEBUSER
 fi
 
+
+# Ask User If Script Run Withour ARGS (Get ActiveCollab Domain)
+if [ $# -lt 3 ]
+then
+	echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
+	read -p " Enter The AC Domain Name: " DOMAIN
+	ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'https://''"| sed "s'www.''")
+	echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+else
+	DOMAIN=$3
+	ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'https://''"| sed "s'www.''")
+	echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+fi
+
 # Check Local/Remote ActiveCollab
-curl -sI test.com/www-data.pub | head -n1 | grep -i  '200 OK'
+curl -sI $ACDOMAIN/www-data.pub | head -n1 | grep -i  '200 OK'
 if [ $? -eq 0 ]
 then
-	# Gitolite & ActiveCollab Is On Different System
-	
-	# Pre Checks Of ActiveCollab Domain
-	if [ $# -lt 3 ]
-	then
-		echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
-		read -p " Enter The AC Domain Name: " DOMAIN
-		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
-		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
-	else
-		DOMAIN=$3
-		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
-		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
-	fi
-	
+	# Gitolite & ActiveCollab Is On Different System	
 	# Copy WEBUSER SSH Public Key To GITUSER Home Directory
 	sudo wget -co /home/$GITUSER/$WEBUSER.pub  $ACDOMAIN/www-data.pub \
 	|| OwnError "Unable To Copy $3 $WEBUSER Pubkey"
 	
 else
 	# Gitolite & ActiveCollab Is On Same System
-
 	# Get The Web User Home Dir Path
 	WEBUSERHOME=$(grep $WEBUSER: /etc/passwd | cut -d':' -f6 | head -n1)
 	echo WEBUSERHOME = $WEBUSERHOME &>> $LOGFILE
@@ -352,64 +351,54 @@ sudo -H -u $GITUSER sed -i 's/0077/0007/g' /home/$GITUSER/.gitolite.rc \
 
 # Installing Post Receive Hooks
 echo -e "\033[34m Creating post-receive Hooks \e[0m" | tee -ai $LOGFILE
-cd $BASEPATH
+#cd $BASEPATH
 
-cd ../../../public/ 2> /dev/null 2> /dev/null #|| OwnError "Unable To Change Directory For Hookspath"
-if [ -f .hookspath.rt ]
-then
-	HOOKSPATH=$(cat .hookspath.rt)
-       	echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
+#cd ../../../public/ 2> /dev/null 2> /dev/null #|| OwnError "Unable To Change Directory For Hookspath"
+#if [ -f .hookspath.rt ]
+#then
+#	HOOKSPATH=$(cat .hookspath.rt)
+#      	echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
 
-	CURLPATH=$(whereis curl | cut -d' ' -f2)
+#	CURLPATH=$(whereis curl | cut -d' ' -f2)
 
-	sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
-	&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
+#	sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
+#	&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
 
-	sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
-	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
-	sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
-else
-	if [ $# -lt 3 ]
-	then
-		echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
-		read -p " Enter The AC Domain Name: " DOMAIN
-		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
-		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
-	else
-		DOMAIN=$3
-		ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'www.''")
-		echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
-	fi
+#	sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
+#	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
+#	sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
+#else
+	
 			
 
-	if [ $# -lt 4 ]
-	then
-		echo -e "\033[34m Enter Your Active Collab First Five Letter Of License Key: \e[0m"
-		read -p " Enter Your Active Collab First Five Letter Of License Key: " LICENSE
-		ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
-		echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
-	else
-		LICENSE=$4
-		ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
-		echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
-		
-	fi
+if [ $# -lt 4 ]
+then
+	echo -e "\033[34m Enter Your Active Collab First Five Letter Of License Key: \e[0m"
+	read -p " Enter Your Active Collab First Five Letter Of License Key: " LICENSE
+	ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
+	echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+else
+	LICENSE=$4
+	ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
+	echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+	
+fi
 
-	HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
-       	echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
+HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
+echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
 
-	CURLPATH=$(whereis curl | cut -d' ' -f2)
+CURLPATH=$(whereis curl | cut -d' ' -f2)
 
-	sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
-	&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
+sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
+&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
 
-	sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
-	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
-	sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
+sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
+sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
+sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup --hooks-only
 
-	#echo | tee -ai $LOGFILE
-	#echo -e "\033[31m Can't create post-receive Hooks !!  \e[0m" | tee -ai $LOGFILE
-	#echo
+#echo | tee -ai $LOGFILE
+#echo -e "\033[31m Can't create post-receive Hooks !!  \e[0m" | tee -ai $LOGFILE
+#echo
 fi
 
 
