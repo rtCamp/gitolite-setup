@@ -384,7 +384,8 @@ else
 	
 fi
 
-HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
+#HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
+HOOKSPATH=$(echo "http://$ACDOMAIN/hookcall?code=$ACLICENSE&repo_name=$GL_REPO")
 echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
 
 CURLPATH=$(whereis curl | cut -d' ' -f2)
