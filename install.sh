@@ -123,7 +123,7 @@ then
 	CURL=$(echo $?)
 	rpm -qa | grep perl-Time-HiRes >> $LOGFILE
 	PERL=$(echo $?)
-	
+
 	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $PERL >> $LOGFILE
 
 
@@ -179,7 +179,7 @@ then
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ]
 then
 	echo -e "\033[34m Creating $LINUXDISTRO System User [$GITUSER]  \e[0m" | tee -ai $LOGFILE
-	sudo adduser --home-dir /home/$GITUSER --create-home --shell /bin/bash \
+	sudo useradd --home /home/$GITUSER --create-home --shell /bin/bash \
 	-c 'git version control' $GITUSER || OwnError "Unable To Create $GITUSER"
 
 	# Redhat Is More Secure Than Debian and Ubuntu
