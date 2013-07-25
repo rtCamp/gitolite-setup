@@ -73,15 +73,15 @@ then
 	else
         	echo | tee -ai $LOGFILE
 	       	echo -e "\033[31m Currently This Script Supports Only \
-		CentOS, Redhat, Ubuntu and Debian Linux Distro \e[0m"
+			CentOS, Redhat, Ubuntu and Debian Linux Distro \e[0m"
        		exit 200
 	fi
 fi
 
 if [ "$LINUXDISTRO" = "Debian" ] || [ "$LINUXDISTRO" = "Ubuntu" ]
 then
-        echo | tee -ai $LOGFILE
-        echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
+    echo | tee -ai $LOGFILE
+    echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
 
 	# Checking Installed Packages
 	dpkg --list | grep openssh-server >> $LOGFILE
@@ -108,10 +108,11 @@ then
 		apt-get -y install openssh-server git-core curl sudo >> $LOGFILE \
 		|| OwnError "Unable To Install Open SSH Server, Git, Curl And Sudo "
 	fi
+
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ] 
 then
-        echo | tee -ai $LOGFILE
-        echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
+    echo | tee -ai $LOGFILE
+    echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
 
 	# Checking Installed Packages
 	rpm -qa | grep openssh-server >> $LOGFILE
@@ -122,6 +123,7 @@ then
 	CURL=$(echo $?)
 	rpm -qa | grep perl-Time-HiRes >> $LOGFILE
 	PERL=$(echo $?)
+	
 	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $PERL >> $LOGFILE
 
 
@@ -177,8 +179,8 @@ then
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ]
 then
 	echo -e "\033[34m Creating $LINUXDISTRO System User [$GITUSER]  \e[0m" | tee -ai $LOGFILE
-	sudo adduser --home /home/$GITUSER --create-home --shell /bin/bash \
-	-c 'git version control' $GITUSER
+	sudo adduser --home-dir /home/$GITUSER --create-home --shell /bin/bash \
+	-c 'git version control' $GITUSER || OwnError "Unable To Create $GITUSER"
 
 	# Redhat Is More Secure Than Debian and Ubuntu
 	# So Need To Set Read & Execute Permission For Groups/Others
