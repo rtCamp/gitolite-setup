@@ -41,9 +41,9 @@ OwnError()
 }
 
 # Makes Log File Easy To Read
-echo &>> $LOGFILE
-echo &>> $LOGFILE
-echo &>> $LOGFILE
+echo >> $LOGFILE
+echo >> $LOGFILE
+echo >> $LOGFILE
 echo -e "\033[34m Gitolite Admin Installation Started At `date` \e[0m" | tee -ai $LOGFILE
 
 # Detect Linux Distro
@@ -84,16 +84,16 @@ then
         echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
 
 	# Checking Installed Packages
-	dpkg --list | grep openssh-server &>> $LOGFILE
+	dpkg --list | grep openssh-server >> $LOGFILE
 	OPENSSH=$(echo $?)
-	dpkg --list | grep git-core &>> $LOGFILE
+	dpkg --list | grep git-core >> $LOGFILE
 	GITCORE=$(echo $?)
-	dpkg --list | grep curl &>> $LOGFILE
+	dpkg --list | grep curl >> $LOGFILE
 	CURL=$(echo $?)
-	dpkg --list | grep sudo &>> $LOGFILE
+	dpkg --list | grep sudo >> $LOGFILE
 	SUDO=$(echo $?)
 
-	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $SUDO &>> $LOGFILE
+	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $SUDO >> $LOGFILE
 
 
 	# Install Git, Curl & Open SSH If It Not Installed
@@ -105,7 +105,7 @@ then
 
 		# Install Open SSH Server And Git
 		echo -e "\033[34m Installing Open SSH Server, Git and Curl... \e[0m"
-		apt-get -y install openssh-server git-core curl sudo &>> $LOGFILE \
+		apt-get -y install openssh-server git-core curl sudo >> $LOGFILE \
 		|| OwnError "Unable To Install Open SSH Server, Git, Curl And Sudo "
 	fi
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ] 
@@ -114,15 +114,15 @@ then
         echo -e "\033[34m $LINUXDISTRO Detected... \e[0m" | tee -ai $LOGFILE
 
 	# Checking Installed Packages
-	rpm -qa | grep openssh-server &>> $LOGFILE
+	rpm -qa | grep openssh-server >> $LOGFILE
 	OPENSSH=$(echo $?)
-	rpm -qa | grep git-core &>> $LOGFILE
+	rpm -qa | grep git-core >> $LOGFILE
 	GITCORE=$(echo $?)
-	rpm -qa | grep curl &>> $LOGFILE
+	rpm -qa | grep curl >> $LOGFILE
 	CURL=$(echo $?)
-	rpm -qa | grep perl-Time-HiRes &>> $LOGFILE
+	rpm -qa | grep perl-Time-HiRes >> $LOGFILE
 	PERL=$(echo $?)
-	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $PERL &>> $LOGFILE
+	echo Checking Installed Packages = $GITCORE $OPENSSH $CURL $PERL >> $LOGFILE
 
 
 	# Install Git, Curl & Open SSH If It Not Installed
@@ -130,7 +130,7 @@ then
 	then
 		# Install Open SSH Server And Git
 		echo -e "\033[34m Installing Open SSH Server, Git and Curl... \e[0m"
-		yum -y install openssh-server git-core curl perl-Time-HiRes &>> $LOGFILE \
+		yum -y install openssh-server git-core curl perl-Time-HiRes >> $LOGFILE \
 		|| OwnError "Unable To Install Open SSH Server, Git, Curl And perl-Time-HiRes"
 	fi
 fi
@@ -150,16 +150,16 @@ then
 	if [[ $GITUSER = "" ]]
 	then
 		GITUSER=git 
-		echo GITUSER = $GITUSER &>> $LOGFILE
+		echo GITUSER = $GITUSER >> $LOGFILE
 	fi
 
 else            
 	GITUSER=$1
-	echo GITUSER = $GITUSER &>> $LOGFILE
+	echo GITUSER = $GITUSER >> $LOGFILE
 fi
 
 # Check Passwd File For Exsiting User        
-grep ^$GITUSER: /etc/passwd &>> $LOGFILE
+grep ^$GITUSER: /etc/passwd >> $LOGFILE
 if [ $? -eq 0 ]
 then
 	echo -e "\033[31m The $GITUSER User Already Exists !! \e[0m" | tee -ai $LOGFILE
@@ -172,7 +172,7 @@ if [ "$LINUXDISTRO" = "Debian" ] || [ "$LINUXDISTRO" = "Ubuntu" ]
 then
 	echo -e "\033[34m Creating $LINUXDISTRO System User [$GITUSER]  \e[0m" | tee -ai $LOGFILE
 	sudo adduser --system --home /home/$GITUSER --shell /bin/bash --group \
-	--disabled-login --disabled-password --gecos 'git version control' $GITUSER &>> $LOGFILE \
+	--disabled-login --disabled-password --gecos 'git version control' $GITUSER >> $LOGFILE \
 	|| OwnError "Unable To Create $GITUSER"
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ]
 then
@@ -205,7 +205,7 @@ cd /home/$GITUSER/setup || OwnError " Unable To Change Directory"
 
 echo | tee -ai $LOGFILE
 echo -e "\033[34m Cloning Gitolite Server Repository... \e[0m" | tee -ai $LOGFILE
-sudo -H -u $GITUSER git clone git://github.com/sitaramc/gitolite  &>> $LOGFILE \
+sudo -H -u $GITUSER git clone git://github.com/sitaramc/gitolite  >> $LOGFILE \
 || OwnError "Unable to clone gitolote repository"
 
 # Create a Symbolic Link For Gitolite in /home/git/bin Directory
@@ -226,11 +226,11 @@ then
 	if [[ $WEBUSER = "" ]]
 	then
 		WEBUSER=www-data
-		echo WEBUSER = $WEBUSER &>> $LOGFILE
+		echo WEBUSER = $WEBUSER >> $LOGFILE
 	fi
 else
 	WEBUSER=$2
-	echo WEBUSER = $WEBUSER &>> $LOGFILE
+	echo WEBUSER = $WEBUSER >> $LOGFILE
 fi
 
 
@@ -238,7 +238,7 @@ fi
 echo -e "\033[34m Adding $WEBUSER to $GITUSER Group  \e[0m" | tee -ai $LOGFILE
 if [ "$LINUXDISTRO" = "Debian" ] || [ "$LINUXDISTRO" = "Ubuntu" ]
 then
-	sudo adduser $WEBUSER $GITUSER &>> $LOGFILE
+	sudo adduser $WEBUSER $GITUSER >> $LOGFILE
 elif [ "$LINUXDISTRO" = "RedHat" ] || [ "$LINUXDISTRO" = "CentOS" ]
 then
 	sudo usermod -a -G $GITUSER $WEBUSER
@@ -251,11 +251,11 @@ then
 	echo -e "\033[34m Enter Your AC Domain Name: \e[0m"
 	read -p " Enter The AC Domain Name: " DOMAIN
 	ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'https://''"| sed "s'www.''")
-	echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	echo "ActiveCollab Domain Name = $ACDOMAIN" >> $LOGFILE
 else
 	DOMAIN=$3
 	ACDOMAIN=$(echo $DOMAIN | sed "s'http://''" | sed "s'https://''"| sed "s'www.''")
-	echo "ActiveCollab Domain Name = $ACDOMAIN" &>> $LOGFILE
+	echo "ActiveCollab Domain Name = $ACDOMAIN" >> $LOGFILE
 fi
 
 # Check Local/Remote ActiveCollab
@@ -271,7 +271,7 @@ else
 	# Gitolite & ActiveCollab Is On Same System
 	# Get The Web User Home Dir Path
 	WEBUSERHOME=$(grep $WEBUSER: /etc/passwd | cut -d':' -f6 | head -n1)
-	echo WEBUSERHOME = $WEBUSERHOME &>> $LOGFILE
+	echo WEBUSERHOME = $WEBUSERHOME >> $LOGFILE
 	if [ -z $WEBUSERHOME ]
 	then
 		echo | tee -ai $LOGFILE
@@ -280,7 +280,7 @@ else
 	fi
 
 	# Checks .ssh Directory Exist
-	ls $WEBUSERHOME/.ssh &>> tee -ai $LOGFILE
+	ls $WEBUSERHOME/.ssh >> tee -ai $LOGFILE
 	if [ $? -ne 0 ]
 	then
 		echo -e "\033[34m Creating .ssh Directory \e[0m" | tee -ai $LOGFILE
@@ -290,7 +290,7 @@ else
 	fi
 
 	# Checks Weather id_rsa Key Exist
-	sudo ls  $WEBUSERHOME/.ssh/id_rsa &>> $LOGFILE
+	sudo ls  $WEBUSERHOME/.ssh/id_rsa >> $LOGFILE
 	if [ $? -eq 0 ]
 	then
 		echo -e "\033[34m The SSH Key id_rsa Already Exists \e[0m" | tee -ai $LOGFILE
@@ -340,7 +340,7 @@ sudo chown $GITUSER:$GITUSER /home/$GITUSER/$WEBUSER.pub \
 
 cd /home/$GITUSER
 
-sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup -pk $WEBUSER.pub &>> $LOGFILE \
+sudo -H -u $GITUSER /home/$GITUSER/bin/gitolite setup -pk $WEBUSER.pub >> $LOGFILE \
 || OwnError "Unable To Setup Gitolite Admin (Key)"
 
 # Change UMASK Value
@@ -357,12 +357,12 @@ echo -e "\033[34m Creating post-receive Hooks \e[0m" | tee -ai $LOGFILE
 #if [ -f .hookspath.rt ]
 #then
 #	HOOKSPATH=$(cat .hookspath.rt)
-#      	echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
+#      	echo HOOKSPATH = $HOOKSPATH >> $LOGFILE
 
 #	CURLPATH=$(whereis curl | cut -d' ' -f2)
 
 #	sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
-#	&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
+#	>> /home/$GITUSER/.gitolite/hooks/common/post-receive
 
 #	sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
 #	sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
@@ -376,22 +376,22 @@ then
 	echo -e "\033[34m Enter Your Active Collab First Five Letter Of License Key: \e[0m"
 	read -p " Enter Your Active Collab First Five Letter Of License Key: " LICENSE
 	ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
-	echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+	echo "ActiveCollab License Code = $ACLICENSE" >> $LOGFILE
 else
 	LICENSE=$4
 	ACLICENSE=$(echo -n $LICENSE | cut -c1-5)
-	echo "ActiveCollab License Code = $ACLICENSE" &>> $LOGFILE
+	echo "ActiveCollab License Code = $ACLICENSE" >> $LOGFILE
 	
 fi
 
 #HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=frequently&code=$ACLICENSE")
 HOOKSPATH=$(echo "http://$ACDOMAIN/public/index.php?path_info=hookcall&code=$ACLICENSE&repo_name=\$GL_REPO")
-echo HOOKSPATH = $HOOKSPATH &>> $LOGFILE
+echo HOOKSPATH = $HOOKSPATH >> $LOGFILE
 
 CURLPATH=$(whereis curl | cut -d' ' -f2)
 
 sudo -H -u $GITUSER echo "$CURLPATH -s -kL \"$HOOKSPATH\" > /dev/null " \
-&>> /home/$GITUSER/.gitolite/hooks/common/post-receive
+>> /home/$GITUSER/.gitolite/hooks/common/post-receive
 
 sudo chmod a+x /home/$GITUSER/.gitolite/hooks/common/post-receive
 sudo chown $GITUSER:$GITUSER /home/$GITUSER/.gitolite/hooks/common/post-receive
