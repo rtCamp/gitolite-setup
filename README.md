@@ -26,3 +26,6 @@ curl -Ls http://rt.cx/gitlab | sudo bash -s GITUSER WEBUSER ACDOMAIN ACLICENSE
 sudo bash install.sh git www-data ac.example.com xaVCf
 ```
 
+## Does this interest you?
+
+<a href="https://rtcamp.com/"><img src="https://rtcamp.com/wp-content/uploads/2019/04/github-banner@2x.png" alt="Join us at rtCamp, we specialize in providing high performance enterprise WordPress solutions"></a>
